@@ -2,20 +2,17 @@
 
 var webpack = require('webpack');
 var path = require('path');
-var pkg = require('./package.json');
-
-const banner = `version: ${pkg.version}`;
 
 module.exports = {
     entry: [
+        'webpack-dev-server/client?http://127.0.0.1:3000',
+        'webpack/hot/dev-server',
         './src/index.js'
     ],
     output: {
         path: path.join(process.cwd(), 'dist/'),
         filename: 'chart.js',
-        library: 'chart',
-        libraryTarget: 'umd',
-        umdNamedDefine: true
+        publicPath: '/'
     },
     module: {
         loaders: [{
@@ -28,9 +25,8 @@ module.exports = {
         }]
     },
     plugins: [
-        new webpack.optimize.UglifyJsPlugin(),
-        new webpack.BannerPlugin(banner, {
-            entryOnly: true
-        })
-    ]
+        new webpack.HotModuleReplacementPlugin(),
+        new webpack.NoErrorsPlugin()
+    ],
+    devtool: 'eval'
 };
