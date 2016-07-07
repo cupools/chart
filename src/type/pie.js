@@ -1,28 +1,43 @@
 'use strict';
 
-export default {
-    render(ctx) {
-        let renderDate = [2, 2, 4];
-        let radius = 100;
-        let textRadius = 60;
-        let outRadius = 10;
-        let pos = [250, 250];
+import _ from '../utils/util.js';
+import '../utils/polyfill.js';
 
-        let sum = renderDate.reduce((a, b) => (a + b));
+const defaultOptions = {
+    renderDate: [],
+    radius: 100,
+    textRadius: 60,
+    outRadius: 0,
+    pos: [160, 160]
+};
+
+export default {
+    render(ctx, opt = {}) {
+        let options = Object.assign({}, defaultOptions, opt);
+        let {renderDate, radius, textRadius, outRadius, pos} = options;
+        let sum = renderDate.reduce((a, b) => (a.count + b.count));
         let last = 0 - Math.PI / 2;
 
-        renderDate.map((count, idx) => {
+        renderDate.map(item => _.assignWith(item, {
+            radius,
+            textRadius,
+            outRadius
+        }));
+
+        renderDate.map(({count, outRadius, texture}, idx) => {
             let startAngle = last;
             let endAngle = count / sum * Math.PI * 2 + startAngle;
             let angle = (endAngle - startAngle + Math.PI) / 2 + last;
-            let x, y;
+            let x,
+                y;
 
             ctx.save();
-            ctx.fillStyle = '#00' + count;
-            ctx.strokeStyle = '#00' + count;
+            ctx.fillStyle = texture;
+            ctx.strokeStyle = texture;
             ctx.beginPath();
-            x = pos[0] + Math.sin(angle) * outRadius;
-            y = pos[1] - Math.cos(angle) * outRadius;
+
+            x = pos[0] + (outRadius ? Math.sin(angle) * outRadius : 0);
+            y = pos[1] - (outRadius ? Math.cos(angle) * outRadius : 0);
 
             ctx.moveTo(x, y);
             ctx.arc(x, y, radius, startAngle, endAngle, false);
@@ -31,6 +46,7 @@ export default {
             ctx.stroke();
             ctx.restore();
 
+            // TODO
             ctx.save();
             let txt = count;
             x = pos[0] + Math.sin(angle) * textRadius;
