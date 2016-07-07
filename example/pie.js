@@ -1,3 +1,4 @@
+/* global chart */
 'use strict';
 
 var pie = chart.pie;

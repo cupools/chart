@@ -3,6 +3,7 @@
 
 var webpack = require('webpack');
 var WebpackDevServer = require('webpack-dev-server');
+var child = require('child_process');
 var config = require('./webpack.dev.js');
 
 new WebpackDevServer(webpack(config), {
@@ -20,5 +21,6 @@ new WebpackDevServer(webpack(config), {
         console.log(err);
     } else {
         console.log('Listening at http://127.0.0.1:3000');
+        child.exec('open http://127.0.0.1:3000/example/dev.html');
     }
 });
