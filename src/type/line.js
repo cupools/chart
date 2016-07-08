@@ -1,30 +1,36 @@
 'use strict';
 
 const defaultOptions = {
-    renderDate: [{
-        count: 3,
+    renderData: [{
+        count: 1,
         name: 1
     }, {
-        count: 4,
+        count: 2,
         name: 2
     }, {
-        count: 6,
+        count: 3,
         name: 3
     }, {
-        count: 2,
-        name: 4
-    }, {
-        count: 5,
-        name: 5
-    }, {
-        count: 4,
-        name: 6
+    //     count: 4,
+    //     name: 4
+    // }, {
+    //     count: 5,
+    //     name: 5
+    // }, {
+    //     count: 6,
+    //     name: 6
+    // }, {
+    //     count: 7,
+    //     name: 7
+    // }, {
+        count: 8,
+        name: 8
     }],
     width: 300,
     height: 250,
     position: [0, 50],
     padding: 40,
-    unitWidth: 40
+    minUnitWidth: 40
 };
 
 /**
@@ -34,7 +40,7 @@ const defaultOptions = {
 class Line {
     constructor(ctx, opts) {
         let options = Object.assign({}, defaultOptions, opts);
-        let {renderDate, position, width, height, padding} = options;
+        let {renderData, position, width, height, padding, minUnitWidth} = options;
 
         this.ctx = ctx;
         this.options = options;
@@ -44,18 +50,34 @@ class Line {
             height: height - padding,
             origin: [position[0] + padding, position[1] + height - padding]
         };
-
         this.ctl = {
-            offsetX: 0,
-            sum: renderDate.reduce((a, b) => (a.count ? a.count : a) + b.count),
+            offsetX: 1,
+            sum: renderData.reduce((a, b) => (a.count ? a.count : a) + b.count),
             maxUnitCount: {
-                x: renderDate.length,
-                y: Math.max(...renderDate.map(p => p.count))
+                x: Math.min(Math.ceil((width - padding) / minUnitWidth), renderData.length),
+                y: Math.max(...renderData.map(p => p.count))
             }
         };
+
+        this._renderData = [];
+    }
+
+    initialData() {
+        let {renderData} = this.options;
+        let {offsetX, maxUnitCount} = this.ctl;
+        let count = maxUnitCount.x;
+        let data = renderData.map(p => Object.assign({}, p)).splice(offsetX, count);
+
+        data.map((p, idx) => {
+            p.position = this._axies2pos(idx, p.count);
+            p.idx = idx + 1;
+        });
+
+        this._renderData = data;
     }
 
     render() {
+        this.initialData();
         this.renderAxies();
         this.renderRegion();
         this.rentderPoints();
@@ -86,18 +108,19 @@ class Line {
         }
     }
 
+    // 绘制折线区域
     renderRegion() {
         let points = [];
-        let {renderDate} = this.options;
+        let renderData = this._renderData;
 
-        renderDate.map((item, idx) => {
-            points.push(this._axies2pos(idx + 1, item.count));
+        renderData.map(item => {
+            points.push(this._axies2pos(item.idx, item.count));
         });
 
         let first = [...points[0]];
         let last = [...points[points.length - 1]];
 
-        if (renderDate.length > 1) {
+        if (renderData.length > 1) {
             first[1] = last[1] = this.graph.origin[1];
             points.push(last);
             points.unshift(first);
@@ -109,16 +132,17 @@ class Line {
         }
     }
 
+    // 绘制参考系文字内容
     renderTips() {
-        let {renderDate} = this.options;
-        let len = renderDate.length;
+        let {renderData} = this.options;
+        let len = renderData.length;
 
-        renderDate.map((item, idx) => {
-            let {count} = item;
-            let pos = this._axies2pos(idx + 1, count);
+        renderData.map(item => {
+            let {count, idx} = item;
+            let pos = this._axies2pos(idx, count);
             let offset = -12;
 
-            if (idx > 0 && idx < len - 1 && item.count < renderDate[idx - 1].count) {
+            if (idx > 0 && idx < len - 1 && item.count < renderData[idx - 1].count) {
                 offset = 13;
             }
 
@@ -129,11 +153,12 @@ class Line {
         });
     }
 
+    // 绘制节点
     rentderPoints() {
-        let {renderDate} = this.options;
+        let {renderData} = this.options;
         let ctx = this.ctx;
 
-        renderDate.map((item, idx) => {
+        renderData.map((item, idx) => {
             let {count} = item;
             let start = this._axies2pos(idx + 1, count);
 
@@ -148,9 +173,9 @@ class Line {
         });
     }
 
+    // 绘制坐标系下标及内容
     renderComment() {
-        let {renderDate, padding} = this.options;
-        let {offsetX} = this.ctl;
+        let {renderData, padding} = this.options;
         let maxX = this.ctl.maxUnitCount.x;
         let maxY = this.ctl.maxUnitCount.y + 2;
         let pos = null;
@@ -163,7 +188,7 @@ class Line {
 
         while (maxX-- > -1) {
             let pos = this._axies2pos(maxX + 1, 0);
-            let item = renderDate[maxX + offsetX];
+            let item = renderData[maxX];
             this.text(item ? item.name : 0, [pos[0], pos[1] + padding / 3]);
         }
 
@@ -171,7 +196,6 @@ class Line {
             let pos = this._axies2pos(0, maxY);
             this.text(maxY, [pos[0] - padding / 3, pos[1]]);
         }
-
     }
 
     text(txt, pos, opts = {}) {
@@ -222,10 +246,9 @@ class Line {
     }
 
     _axies2pos(x, y) {
-        let {offsetX} = this.ctl;
         let {origin} = this.graph;
 
-        let left = origin[0] + (x - offsetX) * this.getUnitX();
+        let left = origin[0] + x * this.getUnitX();
         let top = origin[1] - y * this.getUnitY();
 
         return [
@@ -235,7 +258,8 @@ class Line {
     }
 
     getUnitX() {
-        return this.options.unitWidth;
+        let unitWidth = Math.max(this.graph.width / this.ctl.maxUnitCount.x, this.options.minUnitWidth);
+        return unitWidth;
     }
 
     getUnitY() {
