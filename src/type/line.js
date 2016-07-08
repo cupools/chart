@@ -2,10 +2,10 @@
 
 const defaultOptions = {
     renderDate: [{
-        count: 2,
+        count: 3,
         name: 1
     }, {
-        count: 1,
+        count: 4,
         name: 2
     }, {
         count: 6,
@@ -14,15 +14,22 @@ const defaultOptions = {
         count: 2,
         name: 4
     }, {
-        count: 3,
+        count: 5,
         name: 5
+    }, {
+        count: 4,
+        name: 6
     }],
     width: 300,
     height: 250,
-    position: [0, 0],
+    position: [0, 50],
     padding: 40,
     unitWidth: 40
 };
+
+/**
+ * TODO: 中间件方式绘图
+ */
 
 class Line {
     constructor(ctx, opts) {
@@ -35,10 +42,7 @@ class Line {
         this.graph = {
             width: width - padding,
             height: height - padding,
-            origin: {
-                top: height - padding,
-                left: padding
-            }
+            origin: [position[0] + padding, position[1] + height - padding]
         };
 
         this.ctl = {
@@ -53,73 +57,81 @@ class Line {
 
     render() {
         this.renderAxies();
-        this.renderTips();
+        this.renderRegion();
         this.rentderPoints();
+        this.renderTips();
+        this.renderComment();
     }
 
     renderAxies() {
         let maxX = this.ctl.maxUnitCount.x + 1;
-        let maxY = this.ctl.maxUnitCount.y + 1;
+        let maxY = this.ctl.maxUnitCount.y + 2;
 
         while (maxY--) {
             let start = this._axies2pos(0, maxY);
             let end = this._axies2pos(maxX, maxY);
 
             this.lintTo(start, end, {
-                color: '#333'
+                color: '#999'
             });
         }
 
         while (maxX--) {
             let start = this._axies2pos(maxX, 0);
             let end = this._axies2pos(maxX, 0);
-            end.top = end.top - 5;
+            end[1] = end[1] - 5;
             this.lintTo(start, end, {
                 color: '#666'
             });
         }
     }
 
-    lintTo(start, end, {color}) {
-        let ctx = this.ctx;
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(start.left, start.top);
-        ctx.lineTo(end.left, end.top);
-        ctx.strokeStyle = color;
-        ctx.stroke();
-        ctx.restore();
-    }
+    renderRegion() {
+        let points = [];
+        let {renderDate} = this.options;
 
-    polygons(points, {color}) {
-        let ctx = this.ctx;
-
-        ctx.save();
-        ctx.beginPath();
-
-        let first = points.shift();
-
-        ctx.moveTo(first.left, first.top);
-
-        points.map(point => {
-            console.log(point);
-            ctx.lineTo(point.left, point.top);
+        renderDate.map((item, idx) => {
+            points.push(this._axies2pos(idx + 1, item.count));
         });
 
-        ctx.lineTo(first.left, first.top);
+        let first = [...points[0]];
+        let last = [...points[points.length - 1]];
 
-        ctx.fillStyle = color;
-        ctx.fill();
-        ctx.closePath();
-        ctx.restore();
+        if (renderDate.length > 1) {
+            first[1] = last[1] = this.graph.origin[1];
+            points.push(last);
+            points.unshift(first);
+
+            this.polygons(points, {
+                fillStyle: 'rgba(127,170,126,.3)',
+                strokeStyle: 'rgb(127,170,126)'
+            });
+        }
     }
 
-    renderTips() {}
+    renderTips() {
+        let {renderDate} = this.options;
+        let len = renderDate.length;
+
+        renderDate.map((item, idx) => {
+            let {count} = item;
+            let pos = this._axies2pos(idx + 1, count);
+            let offset = -12;
+
+            if (idx > 0 && idx < len - 1 && item.count < renderDate[idx - 1].count) {
+                offset = 13;
+            }
+
+            pos[1] += offset;
+            this.text(count, pos, {
+                fillStyle: '#71b070'
+            });
+        });
+    }
 
     rentderPoints() {
         let {renderDate} = this.options;
         let ctx = this.ctx;
-        let points = [];
 
         renderDate.map((item, idx) => {
             let {count} = item;
@@ -127,37 +139,99 @@ class Line {
 
             ctx.save();
             ctx.beginPath();
-            ctx.moveTo(start.left, start.top);
-            ctx.arc(start.left, start.top, 5, 0, Math.PI * 2);
+            ctx.moveTo(...start);
+            ctx.arc(...start, 3, 0, Math.PI * 2);
             ctx.closePath();
-            ctx.fillStyle = '#f60';
+            ctx.fillStyle = '#6cab6b';
             ctx.fill();
             ctx.restore();
-
-            points.push(start);
         });
+    }
 
-        let first = Object.assign({}, points[0]);
-        let last = Object.assign({}, points[points.length - 1]);
+    renderComment() {
+        let {renderDate, padding} = this.options;
+        let {offsetX} = this.ctl;
+        let maxX = this.ctl.maxUnitCount.x;
+        let maxY = this.ctl.maxUnitCount.y + 2;
+        let pos = null;
 
-        if (last !== first) {
-            first.top = last.top = this.graph.origin.top;
-            points.push(last, first);
-            this.polygons(points, {color: 'rgba(255,0,0,.5)'});
+        pos = this._axies2pos(maxX, 0);
+        this.text('7月/日', [pos[0], pos[1] + padding / 4 * 3]);
+
+        pos = this._axies2pos(0, maxY - 1);
+        this.text('枚/', [pos[0] - padding / 4 * 3, pos[1]]);
+
+        while (maxX-- > -1) {
+            let pos = this._axies2pos(maxX + 1, 0);
+            let item = renderDate[maxX + offsetX];
+            this.text(item ? item.name : 0, [pos[0], pos[1] + padding / 3]);
         }
+
+        while (maxY-- > 0) {
+            let pos = this._axies2pos(0, maxY);
+            this.text(maxY, [pos[0] - padding / 3, pos[1]]);
+        }
+
+    }
+
+    text(txt, pos, opts = {}) {
+        let {fillStyle = '#999'} = opts;
+        let ctx = this.ctx;
+        let w = ctx.measureText(txt).width;
+        let left = pos[0] - w / 2;
+        let top = pos[1] + 5;
+
+        ctx.font = '10px Arial';
+        ctx.fillStyle = fillStyle;
+        ctx.fillText(txt, left, top);
+        ctx.restore();
+    }
+
+    lintTo(start, end, {color, width = 1}) {
+        let ctx = this.ctx;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(...start);
+        ctx.lineWidth = width;
+        ctx.lineTo(...end);
+        ctx.strokeStyle = color;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    polygons(points, {fillStyle, strokeStyle}) {
+        let ctx = this.ctx;
+
+        ctx.save();
+        ctx.beginPath();
+
+        let first = points.shift();
+
+        ctx.moveTo(...first);
+        points.map(point => {
+            ctx.lineTo(...point);
+        });
+        ctx.strokeStyle = strokeStyle;
+        ctx.stroke();
+
+        ctx.lineTo(...first);
+        ctx.fillStyle = fillStyle;
+        ctx.fill();
+        ctx.closePath();
+        ctx.restore();
     }
 
     _axies2pos(x, y) {
         let {offsetX} = this.ctl;
         let {origin} = this.graph;
 
-        let left = origin.left + (x - offsetX) * this.getUnitX();
-        let top = origin.top - y * this.getUnitY();
+        let left = origin[0] + (x - offsetX) * this.getUnitX();
+        let top = origin[1] - y * this.getUnitY();
 
-        return {
-            top,
-            left
-        };
+        return [
+            left,
+            top
+        ];
     }
 
     getUnitX() {
