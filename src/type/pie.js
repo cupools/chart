@@ -1,14 +1,13 @@
 'use strict';
 
 import _ from '../utils/util.js';
-import '../utils/polyfill.js';
 
 const defaultOptions = {
     renderDate: [],
     radius: 100,
     textRadius: 60,
     outRadius: 0,
-    pos: [160, 160]
+    pos: [0, 0]
 };
 
 export default {
@@ -36,8 +35,8 @@ export default {
             ctx.strokeStyle = texture;
             ctx.beginPath();
 
-            x = pos[0] + (outRadius ? Math.sin(angle) * outRadius : 0);
-            y = pos[1] - (outRadius ? Math.cos(angle) * outRadius : 0);
+            x = pos[0] + (radius / 2) + (outRadius ? Math.sin(angle) * outRadius : 0);
+            y = pos[1] + (radius / 2) - (outRadius ? Math.cos(angle) * outRadius : 0);
 
             ctx.moveTo(x, y);
             ctx.arc(x, y, radius, startAngle, endAngle, false);
@@ -49,8 +48,8 @@ export default {
             // TODO
             ctx.save();
             let txt = count;
-            x = pos[0] + Math.sin(angle) * textRadius;
-            y = pos[1] - Math.cos(angle) * textRadius;
+            x = pos[0] + (radius / 2) + Math.sin(angle) * textRadius;
+            y = pos[1] + (radius / 2) - Math.cos(angle) * textRadius;
             ctx.font = '14px Arial';
             ctx.fillStyle = '#fff';
             ctx.fillText(txt, x, y);
@@ -59,4 +58,4 @@ export default {
             last = endAngle;
         });
     }
-}
+};
