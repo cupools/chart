@@ -1,7 +1,7 @@
 'use strict';
 
 export default {
-    assignWith: function(target) {
+    assignWith(target) {
         if (target == null) {
             throw new TypeError('Cannot convert undefined or null to object');
         }
@@ -18,5 +18,7 @@ export default {
             }
         }
         return target;
-    }
+    },
+    max: Math.max,
+    min: Math.min
 };

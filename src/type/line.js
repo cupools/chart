@@ -1,5 +1,7 @@
 'use strict';
 
+import _ from '../utils/util';
+
 const defaultOptions = {
     renderData: [{
         count: 1,
@@ -11,18 +13,18 @@ const defaultOptions = {
         count: 3,
         name: 3
     }, {
-    //     count: 4,
-    //     name: 4
-    // }, {
-    //     count: 5,
-    //     name: 5
-    // }, {
-    //     count: 6,
-    //     name: 6
-    // }, {
-    //     count: 7,
-    //     name: 7
-    // }, {
+        count: 4,
+        name: 4
+    }, {
+        count: 5,
+        name: 5
+    }, {
+        count: 6,
+        name: 6
+    }, {
+        count: 7,
+        name: 7
+    }, {
         count: 8,
         name: 8
     }],
@@ -51,11 +53,11 @@ class Line {
             origin: [position[0] + padding, position[1] + height - padding]
         };
         this.ctl = {
-            offsetX: 1,
+            offsetX: 0,
             sum: renderData.reduce((a, b) => (a.count ? a.count : a) + b.count),
             maxUnitCount: {
-                x: Math.min(Math.ceil((width - padding) / minUnitWidth), renderData.length),
-                y: Math.max(...renderData.map(p => p.count))
+                x: _.min(Math.ceil((width - padding) / minUnitWidth), renderData.length),
+                y: _.max(...renderData.map(p => p.count)) + 1
             }
         };
 
@@ -65,12 +67,12 @@ class Line {
     initialData() {
         let {renderData} = this.options;
         let {offsetX, maxUnitCount} = this.ctl;
-        let count = maxUnitCount.x;
+        let count = maxUnitCount.x + 1;
         let data = renderData.map(p => Object.assign({}, p)).splice(offsetX, count);
 
         data.map((p, idx) => {
             p.position = this._axies2pos(idx, p.count);
-            p.idx = idx + 1;
+            p.idx = idx;
         });
 
         this._renderData = data;
@@ -78,33 +80,84 @@ class Line {
 
     render() {
         this.initialData();
+
+        // 绘制坐标系
         this.renderAxies();
-        this.renderRegion();
-        this.rentderPoints();
-        this.renderTips();
         this.renderComment();
+
+        // 绘制内容
+        this.renderRegion();
+        this.renderPoints();
+        this.renderTips();
     }
 
+    // 绘制坐标系参考线
     renderAxies() {
-        let maxX = this.ctl.maxUnitCount.x + 1;
-        let maxY = this.ctl.maxUnitCount.y + 2;
+        let mucX = this.ctl.maxUnitCount.x;
+        let mucY = this.ctl.maxUnitCount.y;
 
-        while (maxY--) {
-            let start = this._axies2pos(0, maxY);
-            let end = this._axies2pos(maxX, maxY);
+        // x轴额外绘制一个无用点，实际上增加了两个单位
+        // y轴额外绘制一个无用点，两条参考线
+        let expX = mucX + 1;
+        let expY = mucY + 1;
 
-            this.lintTo(start, end, {
+        // 绘制y轴参考线
+        while (expY--) {
+            let start = this._axies2pos(0, expY);
+            let end = this._axies2pos(expX, expY);
+
+            this.line(start, end, {
                 color: '#999'
             });
         }
 
-        while (maxX--) {
-            let start = this._axies2pos(maxX, 0);
-            let end = this._axies2pos(maxX, 0);
+        // 绘制x轴参考点
+        while (expX--) {
+            let start = this._axies2pos(expX, 0);
+            let end = this._axies2pos(expX, 0);
             end[1] = end[1] - 5;
-            this.lintTo(start, end, {
+            this.line(start, end, {
                 color: '#666'
             });
+        }
+    }
+
+    // 绘制坐标系下标及内容
+    renderComment() {
+        let {padding} = this.options;
+        let renderData = this._renderData;
+        let mucY = this.ctl.maxUnitCount.y;
+        let mucX = this.ctl.maxUnitCount.x;
+
+        // x轴只绘制点集相关的下标
+        // y轴额外绘制一个无用点
+        let expX = renderData.length - 1;
+        let expY = mucY;
+        let pos = null;
+
+        // 右下角，倒数第二个标
+        pos = this._axies2pos(mucX - 1, 0);
+        pos[1] = pos[1] + padding / 4 * 3;
+        this.text('7月/日', pos);
+
+        // 左上角第一个标
+        pos = this._axies2pos(0, expY);
+        pos[0] = pos[0] - padding / 4 * 3;
+        this.text('枚/', pos);
+
+        while (expX > -1) {
+            let item = renderData[expX];
+            let pos = this._axies2pos(expX, 0);
+
+            this.text(item.name, [pos[0], pos[1] + padding / 3]);
+            expX--;
+        }
+
+        while (expY > -1) {
+            let pos = this._axies2pos(0, expY);
+
+            this.text(expY, [pos[0] - padding / 3, pos[1]]);
+            expY--;
         }
     }
 
@@ -114,16 +167,16 @@ class Line {
         let renderData = this._renderData;
 
         renderData.map(item => {
-            points.push(this._axies2pos(item.idx, item.count));
+            points.push(item.position);
         });
 
-        let first = [...points[0]];
-        let last = [...points[points.length - 1]];
-
         if (renderData.length > 1) {
+            let first = [...points[0]];
+            let last = [...points[points.length - 1]];
+
             first[1] = last[1] = this.graph.origin[1];
-            points.push(last);
             points.unshift(first);
+            points.push(last);
 
             this.polygons(points, {
                 fillStyle: 'rgba(127,170,126,.3)',
@@ -134,12 +187,12 @@ class Line {
 
     // 绘制参考系文字内容
     renderTips() {
-        let {renderData} = this.options;
+        let renderData = this._renderData;
         let len = renderData.length;
 
         renderData.map(item => {
             let {count, idx} = item;
-            let pos = this._axies2pos(idx, count);
+            let pos = item.position;
             let offset = -12;
 
             if (idx > 0 && idx < len - 1 && item.count < renderData[idx - 1].count) {
@@ -154,48 +207,22 @@ class Line {
     }
 
     // 绘制节点
-    rentderPoints() {
-        let {renderData} = this.options;
+    renderPoints() {
+        let renderData = this._renderData;
         let ctx = this.ctx;
 
-        renderData.map((item, idx) => {
-            let {count} = item;
-            let start = this._axies2pos(idx + 1, count);
+        renderData.map(item => {
+            let pos = item.position;
 
             ctx.save();
             ctx.beginPath();
-            ctx.moveTo(...start);
-            ctx.arc(...start, 3, 0, Math.PI * 2);
+            ctx.moveTo(...pos);
+            ctx.arc(...pos, 3, 0, Math.PI * 2);
             ctx.closePath();
             ctx.fillStyle = '#6cab6b';
             ctx.fill();
             ctx.restore();
         });
-    }
-
-    // 绘制坐标系下标及内容
-    renderComment() {
-        let {renderData, padding} = this.options;
-        let maxX = this.ctl.maxUnitCount.x;
-        let maxY = this.ctl.maxUnitCount.y + 2;
-        let pos = null;
-
-        pos = this._axies2pos(maxX, 0);
-        this.text('7月/日', [pos[0], pos[1] + padding / 4 * 3]);
-
-        pos = this._axies2pos(0, maxY - 1);
-        this.text('枚/', [pos[0] - padding / 4 * 3, pos[1]]);
-
-        while (maxX-- > -1) {
-            let pos = this._axies2pos(maxX + 1, 0);
-            let item = renderData[maxX];
-            this.text(item ? item.name : 0, [pos[0], pos[1] + padding / 3]);
-        }
-
-        while (maxY-- > 0) {
-            let pos = this._axies2pos(0, maxY);
-            this.text(maxY, [pos[0] - padding / 3, pos[1]]);
-        }
     }
 
     text(txt, pos, opts = {}) {
@@ -211,7 +238,7 @@ class Line {
         ctx.restore();
     }
 
-    lintTo(start, end, {color, width = 1}) {
+    line(start, end, {color, width = 1}) {
         let ctx = this.ctx;
         ctx.save();
         ctx.beginPath();
@@ -258,12 +285,12 @@ class Line {
     }
 
     getUnitX() {
-        let unitWidth = Math.max(this.graph.width / this.ctl.maxUnitCount.x, this.options.minUnitWidth);
+        let unitWidth = _.max(this.graph.width / this.ctl.maxUnitCount.x, this.options.minUnitWidth);
         return unitWidth;
     }
 
     getUnitY() {
-        return this.graph.height / (this.ctl.maxUnitCount.y + 1);
+        return this.graph.height / (this.ctl.maxUnitCount.y);
     }
 }
 
