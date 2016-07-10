@@ -61,11 +61,9 @@ class Line {
             height: height - padding
         };
         this.ctl = {
-            offsetX: 1,
+            offsetX: 0,
+            offsetLeft: 0,
             sum: renderData.reduce((a, b) => (a.count ? a.count : a) + b.count),
-            swipe: {
-                x: 0
-            },
             maxUnitCount: {
                 x: _.min(Math.ceil((width - padding) / minUnitWidth), renderData.length),
                 y: _.max(...renderData.map(p => p.count)) + 1
@@ -84,7 +82,7 @@ class Line {
 
     initialData() {
         let {renderData} = this.options;
-        let {offsetX, maxUnitCount} = this.ctl;
+        let {offsetX, offsetLeft, maxUnitCount} = this.ctl;
         let unitCount = maxUnitCount.x + 1;
         let data = renderData.map(p => Object.assign({}, p)).splice(offsetX, unitCount);
 
@@ -96,12 +94,14 @@ class Line {
             let y = item.count;
             let overflow = (offsetX !== 0 && idx === 0) || (idx === unitCount - 1);
 
-            this.coor.add(x, y, {
+            let point = this.coor.add(x, y, {
                 x,
                 count,
                 name,
                 overflow
             });
+
+            point.offset(offsetLeft, 0);
         });
     }
 
@@ -114,8 +114,8 @@ class Line {
 
         // 绘制内容
         this.renderRegion();
-        this.renderPoints();
         this.renderTips();
+        this.renderPoints();
     }
 
     // 绘制坐标系参考线
@@ -180,6 +180,7 @@ class Line {
             expX--;
         }
 
+        // TODO
         while (expY > -1) {
             pos = coor.point(0, expY).offset(-padding / 3, 0).pos;
             this.text(expY, pos);
@@ -201,16 +202,11 @@ class Line {
                     let next = points[1];
                     let middle = coor.point((next.x + point.x) / 2, (next.y + point.y) / 2);
                     bottomLeft.setX((next.x + point.x) / 2);
-
-                    console.log(middle);
-
                     return middle.pos;
                 } else {
                     let prev = points[points.length - 2];
                     let middle = coor.point((point.x + prev.x) / 2, (point.y + prev.y) / 2);
                     bottomRight.setX((point.x + prev.x) / 2);
-
-                    console.log(middle);
                     return middle.pos;
                 }
             } else {
@@ -226,29 +222,6 @@ class Line {
                 strokeStyle: 'rgb(127,170,126)'
             });
         }
-    }
-
-    // 绘制参考系文字内容
-    renderTips() {
-        let points = this.coor.points;
-        let len = points.length;
-
-        points.map(item => {
-            let {count, x, overflow} = item.attrs;
-            let pos = item.pos;
-            let offset = -12;
-
-            if(!overflow) {
-                if (x > 0 && x < len - 1 && count < points[x - 1].attrs.count) {
-                    offset = 13;
-                }
-
-                item.offset(0, offset);
-                this.text(count, item.pos, {
-                    fillStyle: '#71b070'
-                });
-            }
-        });
     }
 
     // 绘制节点
@@ -268,6 +241,29 @@ class Line {
                 ctx.fillStyle = '#6cab6b';
                 ctx.fill();
                 ctx.restore();
+            }
+        });
+    }
+
+    // 绘制参考系文字内容
+    renderTips() {
+        let points = this.coor.points;
+        let len = points.length;
+
+        points.map(item => {
+            let {count, x, overflow} = item.attrs;
+
+            if (!overflow) {
+                let offset = -12;
+                if (x > 0 && x < len - 1 && count < points[x - 1].attrs.count) {
+                    offset = 13;
+                }
+
+                let pos = item.copy().offset(0, offset).pos;
+
+                this.text(count, pos, {
+                    fillStyle: '#71b070'
+                });
             }
         });
     }

@@ -16,21 +16,21 @@ ctx.translate(0.5, 0.5);
 let el = line.init(ctx);
 el.render();
 
-let mc = new Hammer.Manager(canvas);
-mc.add(new Hammer.Pan({
-    direction: Hammer.DIRECTION_HORIZONTAL,
-    threshold: 10
-}));
+// let mc = new Hammer.Manager(canvas);
+// mc.add(new Hammer.Pan({
+//     direction: Hammer.DIRECTION_HORIZONTAL,
+//     threshold: 10
+// }));
 
-mc.on('panmove', function(ev) {
+// mc.on('panmove', function(ev) {
 
-});
+// });
 
-mc.on('panend pancancel', function() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    el.ctl.offsetX += 1;
-    el.render();
-});
+// mc.on('panend pancancel', function() {
+//     ctx.clearRect(0, 0, canvas.width, canvas.height);
+//     el.ctl.offsetX += 1;
+//     el.render();
+// });
 
 export { pie, line };
 

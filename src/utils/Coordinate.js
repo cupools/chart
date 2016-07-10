@@ -38,8 +38,13 @@ class Point {
     }
 
     offset(left, top) {
+        let {origin, unitX, unitY} = this.props;
+
         this.posX += left;
         this.posY += top;
+        this.x = (this.posX - origin[0]) / unitX;
+        this.y = (origin[1] - this.posY) / unitY;
+
         this.pos = [this.posX, this.posY];
         return this;
     }
