@@ -271,10 +271,10 @@ class Line {
     text(txt, pos, opts = {}) {
         let {fillStyle = '#999'} = opts;
         let ctx = this.ctx;
-        let w = ctx.measureText(txt).width;
-        let left = pos[0] - w / 2;
+        let left = pos[0];
         let top = pos[1] + 5;
 
+        ctx.textAlign = 'center';
         ctx.font = '10px Arial';
         ctx.fillStyle = fillStyle;
         ctx.fillText(txt, left, top);
