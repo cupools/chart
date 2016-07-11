@@ -85,6 +85,12 @@ class Coordinate {
         return this.point(x, y).pos;
     }
 
+    fromPos(left, top, attrs) {
+        let {_origin, unitX, unitY} = this;
+
+        return this.point((left - _origin[0]) / unitX, (_origin[1] - top) / unitY, attrs);
+    }
+
     add(x, y, attr) {
         let point = this.point(x, y, attr);
         this.points.push(point);

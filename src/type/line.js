@@ -1,7 +1,7 @@
 'use strict';
 
 import _ from '../utils/util';
-import Coordinate from '../utils/Coordinate';
+import Coordinate from './Coordinate';
 
 const defaultOptions = {
     renderData: [{
@@ -62,7 +62,7 @@ class Line {
         };
         this.ctl = {
             offsetX: 0,
-            offsetLeft: 0,
+            offsetLeft: 30,
             limitPos: [],
             limitIndex: [1, 5],
             sum: renderData.reduce((a, b) => (a.count ? a.count : a) + b.count),
@@ -84,29 +84,48 @@ class Line {
 
     initialData() {
         let {renderData} = this.options;
-        let {offsetX, maxUnitCount, limitIndex, offsetLeft} = this.ctl;
-        let unitCount = maxUnitCount.x + 1;
-        let data = renderData.map(p => Object.assign({}, p)).splice(offsetX, unitCount);
-        let limitPos = limitIndex.map((i, idx) => this.coor.pos(i, 0)[0] + this.getUnitX() / 2 * (idx ? 1 : -1) + offsetLeft);
+        let {limitIndex, offsetLeft} = this.ctl;
+        let unitX = this.getUnitX();
+        let data = renderData.map(p => Object.assign({}, p));
+        let limitPos = limitIndex.map((i, idx) => this.coor.pos(i, 0)[0] + unitX / 2 * (idx ? 1 : -1) + offsetLeft);
 
+        this.ctl.limitPos = limitPos;
         this.coor.clear();
 
         data.map((item, idx) => {
             let {name, count} = item;
             let x = idx + 1;
             let y = item.count;
-            let overflow = false;
+            let overflow = 0;
 
             let point = this.coor.add(x, y, {
                 index: idx,
                 count,
                 name,
-                overflow
+                overflow,
+                cross: null
             });
 
-            if (point.posX < limitPos[0] || point.posX > limitPos[1]) {
-                console.log(idx);
-                point.attrs.overflow = true;
+            if (point.posX < limitPos[0]) {
+                point.attrs.overflow = -Math.ceil((limitPos[0] - point.posX) / unitX);
+            } else if (point.posX > limitPos[1]) {
+                point.attrs.overflow = Math.ceil((point.posX - limitPos[1]) / unitX);
+            }
+
+            if (point.attrs.overflow === -1) {
+                let next = this.coor.point(idx + 2, data[idx + 1].count);
+                let crossX = limitPos[0];
+                let k = (next.posY - point.posY) / (next.posX - point.posX);
+                let crossY = isFinite(k) ? point.posY + k * (crossX - point.posX) : point.posY;
+
+                point.attrs.cross = this.coor.fromPos(crossX, crossY);
+            } else if (point.attrs.overflow === 1) {
+                let prev = this.coor.point(idx, data[idx - 1].count);
+                let crossX = limitPos[1];
+                let k = (prev.posY - point.posY) / (prev.posX - point.posX);
+                let crossY = isFinite(k) ? point.posY + k * (crossX - point.posX) : point.posY;
+
+                point.attrs.cross = this.coor.fromPos(crossX, crossY);
             }
         });
     }
@@ -201,21 +220,20 @@ class Line {
     renderRegion() {
         let coor = this.coor;
         let points = coor.points;
-        let bottomLeft = points[0].copy().setY(0);
-        let bottomRight = points[points.length - 1].copy().setY(0);
 
-        let renderPoints = points.map(point => {
-            if (point.attrs.overflow) {
-                return point.pos;
-            } else {
-                return point.pos;
-            }
+        let renderPoints = points.filter(p => {
+            return p.attrs.overflow === 0 || p.attrs.cross;
+        }).map(p => {
+            return p.attrs.cross || p;
         });
 
-        if (renderPoints.length > 1) {
-            renderPoints.push(bottomRight.pos, bottomLeft.pos);
+        let bottomLeft = renderPoints[0].copy().setY(0);
+        let bottomRight = renderPoints[renderPoints.length - 1].copy().setY(0);
 
-            this.polygons(renderPoints, {
+        if (renderPoints.length > 1) {
+            renderPoints.push(bottomRight, bottomLeft);
+
+            this.polygons(renderPoints.map(p => p.pos), {
                 fillStyle: 'rgba(127,170,126,.3)',
                 strokeStyle: 'rgb(127,170,126)'
             });
