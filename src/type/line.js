@@ -63,6 +63,8 @@ class Line {
         this.ctl = {
             offsetX: 0,
             offsetLeft: 0,
+            limitPos: [],
+            limitIndex: [1, 5],
             sum: renderData.reduce((a, b) => (a.count ? a.count : a) + b.count),
             maxUnitCount: {
                 x: _.min(Math.ceil((width - padding) / minUnitWidth), renderData.length),
@@ -82,26 +84,30 @@ class Line {
 
     initialData() {
         let {renderData} = this.options;
-        let {offsetX, offsetLeft, maxUnitCount} = this.ctl;
+        let {offsetX, maxUnitCount, limitIndex, offsetLeft} = this.ctl;
         let unitCount = maxUnitCount.x + 1;
         let data = renderData.map(p => Object.assign({}, p)).splice(offsetX, unitCount);
+        let limitPos = limitIndex.map((i, idx) => this.coor.pos(i, 0)[0] + this.getUnitX() / 2 * (idx ? 1 : -1) + offsetLeft);
 
         this.coor.clear();
 
         data.map((item, idx) => {
             let {name, count} = item;
-            let x = idx + (offsetX === 0 ? 1 : 0);
+            let x = idx + 1;
             let y = item.count;
-            let overflow = (offsetX !== 0 && idx === 0) || (idx === unitCount - 1);
+            let overflow = false;
 
             let point = this.coor.add(x, y, {
-                x,
+                index: idx,
                 count,
                 name,
                 overflow
             });
 
-            point.offset(offsetLeft, 0);
+            if (point.posX < limitPos[0] || point.posX > limitPos[1]) {
+                console.log(idx);
+                point.attrs.overflow = true;
+            }
         });
     }
 
@@ -113,9 +119,11 @@ class Line {
         this.renderComment();
 
         // 绘制内容
+        this.ctx.save();
+        this.ctx.translate(-this.ctl.offsetLeft, 0);
         this.renderRegion();
-        this.renderTips();
         this.renderPoints();
+        this.ctx.restore();
     }
 
     // 绘制坐标系参考线
@@ -198,17 +206,7 @@ class Line {
 
         let renderPoints = points.map(point => {
             if (point.attrs.overflow) {
-                if (point.attrs.x === 0) {
-                    let next = points[1];
-                    let middle = coor.point((next.x + point.x) / 2, (next.y + point.y) / 2);
-                    bottomLeft.setX((next.x + point.x) / 2);
-                    return middle.pos;
-                } else {
-                    let prev = points[points.length - 2];
-                    let middle = coor.point((point.x + prev.x) / 2, (point.y + prev.y) / 2);
-                    bottomRight.setX((point.x + prev.x) / 2);
-                    return middle.pos;
-                }
+                return point.pos;
             } else {
                 return point.pos;
             }
@@ -227,10 +225,13 @@ class Line {
     // 绘制节点
     renderPoints() {
         let points = this.coor.points;
+        let len = points.length;
         let ctx = this.ctx;
 
         points.map(item => {
-            if (!item.attrs.overflow) {
+            let {count, x, overflow} = item.attrs;
+
+            if (!overflow) {
                 let pos = item.pos;
 
                 ctx.save();
@@ -241,26 +242,13 @@ class Line {
                 ctx.fillStyle = '#6cab6b';
                 ctx.fill();
                 ctx.restore();
-            }
-        });
-    }
 
-    // 绘制参考系文字内容
-    renderTips() {
-        let points = this.coor.points;
-        let len = points.length;
-
-        points.map(item => {
-            let {count, x, overflow} = item.attrs;
-
-            if (!overflow) {
+                // 绘制节点提示
                 let offset = -12;
                 if (x > 0 && x < len - 1 && count < points[x - 1].attrs.count) {
                     offset = 13;
                 }
-
-                let pos = item.copy().offset(0, offset).pos;
-
+                pos = item.copy().offset(0, offset).pos;
                 this.text(count, pos, {
                     fillStyle: '#71b070'
                 });
@@ -274,6 +262,7 @@ class Line {
         let left = pos[0];
         let top = pos[1] + 5;
 
+        ctx.save();
         ctx.textAlign = 'center';
         ctx.font = '10px Arial';
         ctx.fillStyle = fillStyle;
