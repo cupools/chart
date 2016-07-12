@@ -10,13 +10,12 @@ var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
 ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// fix canvas blur
 ctx.translate(0.5, 0.5);
-// line.render(ctx);
 
 let el = Line.init(ctx);
 el.render();
-
-el.swipeTo(1);
 
 let mc = new Hammer.Manager(canvas);
 mc.add(new Hammer.Pan({
@@ -30,12 +29,15 @@ mc.on('panstart', function() {
 });
 
 mc.on('panmove', function(ev) {
-    el.ctl.offsetLeft = flag - ev.deltaX / 1;
+    el.setOffsetLeft(flag - ev.deltaX / 1);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     el.render();
 });
 
-mc.on('panend pancancel', function() {});
+mc.on('panend pancancel', function() {
+    let {offsetX} = el.ctl;
+    el.swipeTo(offsetX);
+});
 
 export { Pie, Line };
 

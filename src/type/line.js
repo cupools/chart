@@ -63,7 +63,7 @@ class Line {
         };
         this.ctl = {
             offsetX: 0,
-            offsetLeft: 300,
+            offsetLeft: 0,
             limitPos: [],
             limitIndex: [1, 6],
             sum: renderData.reduce((a, b) => (a.count ? a.count : a) + b.count),
@@ -115,14 +115,14 @@ class Line {
                 point.attrs.overflow = Math.ceil((point.posX - limitPos[1]) / unitX);
             }
 
-            if (point.attrs.overflow === -1) {
+            if (point.attrs.overflow === -1 && data[idx + 1]) {
                 let next = this.coor.point(idx + 2, data[idx + 1].count);
                 let crossX = limitPos[0];
                 let k = (next.posY - point.posY) / (next.posX - point.posX);
                 let crossY = isFinite(k) ? point.posY + k * (crossX - point.posX) : point.posY;
 
                 point.attrs.cross = this.coor.fromPos(crossX, crossY);
-            } else if (point.attrs.overflow === 1) {
+            } else if (point.attrs.overflow === 1 && data[idx - 1]) {
                 let prev = this.coor.point(idx, data[idx - 1].count);
                 let crossX = limitPos[1];
                 let k = (prev.posY - point.posY) / (prev.posX - point.posX);
@@ -345,16 +345,23 @@ class Line {
     }
 
     setOffsetLeft(left) {
+        let {unitX} = this.coor;
+        let {limitIndex} = this.ctl;
+
+        let min = 1 - unitX / 2;
+        let max = unitX * (this.options.renderData.length - limitIndex[1] + limitIndex[0]) - unitX / 2 - 1;
+
+        left = _.max(min, _.min(max, left));
         this.ctl.offsetLeft = left;
     }
 
     swipeTo(idx) {
-        let unitX = this.getUnitX();
+        let unitX = this.coor.unitX;
         let offsetLeft = unitX * idx;
 
         easing(this.ctl).to({
             offsetLeft
-        }, 2000, 'easeOutQuart').change(() => {
+        }, 600, 'easeOutQuart').change(() => {
             this.clear();
             this.render();
         }).run();
