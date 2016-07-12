@@ -18,8 +18,8 @@ let store = [];
 heartbeat();
 
 function heartbeat() {
-    store = store.filter(e => {
-        let ret = e.next();
+    store = store.filter(stack => {
+        let ret = stack.shift()();
         return !(ret && ret.done);
     });
 
@@ -42,6 +42,7 @@ class Easing {
     to(final, duration, bezier = easing['linear']) {
         // TODO, easing function adjust
         let easingFn;
+        let stack = this.stack;
 
         if (bezier.length) {
             easingFn = easing[bezier] || easing['linear'];
@@ -49,34 +50,42 @@ class Easing {
             easingFn = bezier;
         }
 
-        this.stack = function*() {
-            let keyframes = Math.ceil(duration / FPS);
-            let start = this._origin;
-            let target = this.target;
+        let keyframes = Math.ceil(duration / FPS);
+        let start = this._origin;
 
-            for (let i = 0; i <= keyframes; i++) {
-                for (let key in final) {
-                    if (final.hasOwnProperty(key)) {
-                        let offset = final[key] - start[key];
-                        let pec = i / keyframes;
-                        target[key] = start[key] + offset * easingFn(pec);
-                    }
+        for (let i = 0; i <= keyframes; i++) {
+            let tmp = {};
+
+            for (let key in final) {
+                if (final.hasOwnProperty(key)) {
+                    let offset = final[key] - start[key];
+                    let pec = i / keyframes;
+                    tmp[key] = start[key] + offset * easingFn(pec);
                 }
-
-                yield this.callback && this.callback(target);
             }
 
-            yield this.callback && this.callback(final);
+            stack.push(() => {
+                Object.assign(this.target, tmp);
+                this.callback && this.callback(tmp);
+            });
+        }
 
+        stack.push(() => {
+            Object.assign(this.target, final);
+            this.callback && this.callback(final);
             this.running = false;
             this.done = true;
-        };
+
+            return {
+                done: true
+            };
+        });
 
         return this;
     }
 
     run() {
-        store.push(this.stack());
+        store.push(this.stack);
     }
 
     stop() {

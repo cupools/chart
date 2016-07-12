@@ -337,7 +337,8 @@ class Line {
     }
 
     getUnitY() {
-        return this.graph.height / (this.ctl.maxUnitCount.y);
+        // for top tips
+        return (this.graph.height - 5) / (this.ctl.maxUnitCount.y);
     }
 
     getOffsetLeft() {

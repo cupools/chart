@@ -1,7 +1,7 @@
 /* global chart */
 'use strict';
 
-var pie = chart.pie;
+var pie = chart.Pie;
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
