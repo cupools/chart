@@ -64,7 +64,7 @@ class Line {
             offsetX: 0,
             offsetLeft: 30,
             limitPos: [],
-            limitIndex: [1, 5],
+            limitIndex: [1, 6],
             sum: renderData.reduce((a, b) => (a.count ? a.count : a) + b.count),
             maxUnitCount: {
                 x: _.min(Math.ceil((width - padding) / minUnitWidth), renderData.length),
@@ -88,8 +88,10 @@ class Line {
         let unitX = this.getUnitX();
         let data = renderData.map(p => Object.assign({}, p));
         let limitPos = limitIndex.map((i, idx) => this.coor.pos(i, 0)[0] + unitX / 2 * (idx ? 1 : -1) + offsetLeft);
+        let offsetX = Math.ceil(this.ctl.offsetLeft / unitX);
 
         this.ctl.limitPos = limitPos;
+        this.ctl.offsetX = offsetX;
         this.coor.clear();
 
         data.map((item, idx) => {
@@ -181,19 +183,20 @@ class Line {
     // 绘制坐标系下标及内容
     renderComment() {
         let {padding} = this.options;
-        let points = this.coor.points;
+        let {offsetX, limitIndex} = this.ctl;
         let mucY = this.ctl.maxUnitCount.y;
         let mucX = this.ctl.maxUnitCount.x;
         let coor = this.coor;
+        let points = coor.points;
 
         // x轴只绘制点集相关的下标
         // y轴额外绘制一个无用点
-        let expX = points.length - 1;
+        let expX = _.min(mucX, limitIndex[1]) - 1;
         let expY = mucY;
         let pos = null;
 
         // 右下角，倒数第二个标
-        pos = coor.point(mucX - 1, 0).offset(0, padding / 4 * 3).pos;
+        pos = coor.point(expX, 0).offset(0, padding / 4 * 3).pos;
         this.text('7月/日', pos);
 
         // 左上角第一个标
@@ -201,9 +204,11 @@ class Line {
         this.text('枚/', pos);
 
         while (expX > -1) {
-            let item = points[expX].attrs;
-            pos = coor.point(expX, 0).offset(0, padding / 3).pos;
-            this.text(item.name, pos);
+            if (points[expX + offsetX]) {
+                let item = points[expX + offsetX].attrs;
+                pos = coor.point(expX + 1, 0).offset(0, padding / 3).pos;
+                this.text(item.name, pos);
+            }
             expX--;
         }
 

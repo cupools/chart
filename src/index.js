@@ -21,14 +21,18 @@ mc.add(new Hammer.Pan({
     threshold: 10
 }));
 
+let flag = 0;
+mc.on('panstart', function() {
+    flag = el.ctl.offsetLeft;
+});
+
 mc.on('panmove', function(ev) {
-    el.ctl.offsetLeft += ev.deltaX / 5;
+    el.ctl.offsetLeft = flag + ev.deltaX / 1;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     el.render();
 });
 
-mc.on('panend pancancel', function() {
-});
+mc.on('panend pancancel', function() {});
 
 export { Pie, Line };
 
