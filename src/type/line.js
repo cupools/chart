@@ -38,7 +38,7 @@ const defaultOptions = {
     }],
     width: 300,
     height: 250,
-    position: [0, 50],
+    position: [0, 0],
     padding: 40,
     minUnitWidth: 40
 };
