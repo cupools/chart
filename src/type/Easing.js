@@ -15,18 +15,16 @@ const requestAnimationFrame = (function() {
 })();
 
 let store = [];
-check();
+heartbeat();
 
-function check() {
+function heartbeat() {
     store = store.filter(e => {
         let ret = e.next();
         return !(ret && ret.done);
     });
 
-    requestAnimationFrame(check);
+    requestAnimationFrame(heartbeat);
 }
-
-// easing(el).to({xxx}, duration, bezier).change().run()
 
 class Easing {
     constructor(target) {
@@ -51,7 +49,7 @@ class Easing {
             easingFn = bezier;
         }
 
-        this.stack = function * () {
+        this.stack = function*() {
             let keyframes = Math.ceil(duration / FPS);
             let start = this._origin;
             let target = this.target;
@@ -96,5 +94,3 @@ class Easing {
 export default function(fn) {
     return new Easing(fn);
 }
-
-;
