@@ -5,7 +5,6 @@ import './utils/polyfill.js';
 import Hammer from 'hammerjs';
 import Pie from './type/Pie';
 import Line from './type/Line';
-import easing from './type/Easing';
 
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
@@ -16,6 +15,8 @@ ctx.translate(0.5, 0.5);
 
 let el = Line.init(ctx);
 el.render();
+
+el.swipeTo(1);
 
 let mc = new Hammer.Manager(canvas);
 mc.add(new Hammer.Pan({
@@ -29,16 +30,10 @@ mc.on('panstart', function() {
 });
 
 mc.on('panmove', function(ev) {
-    el.ctl.offsetLeft = flag + ev.deltaX / 1;
+    el.ctl.offsetLeft = flag - ev.deltaX / 1;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     el.render();
 });
-
-easing(function(current) {
-    el.setOffsetLeft(current);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    el.render();
-}).to(200, 2000, 'easeOutQuart').run();
 
 mc.on('panend pancancel', function() {});
 

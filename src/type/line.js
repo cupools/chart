@@ -2,6 +2,7 @@
 
 import _ from '../utils/util';
 import Coordinate from './Coordinate';
+import easing from './Easing';
 
 const defaultOptions = {
     renderData: [{
@@ -62,7 +63,7 @@ class Line {
         };
         this.ctl = {
             offsetX: 0,
-            offsetLeft: 30,
+            offsetLeft: 300,
             limitPos: [],
             limitIndex: [1, 6],
             sum: renderData.reduce((a, b) => (a.count ? a.count : a) + b.count),
@@ -161,7 +162,7 @@ class Line {
         // 绘制y轴参考线
         while (expY--) {
             let start = coor.pos(0, expY);
-            let end = coor.pos(expX, expY);
+            let end = [this.graph.origin[0] + this.graph.width, start[1]];
 
             this.line(start, end, {
                 color: '#999'
@@ -348,7 +349,20 @@ class Line {
     }
 
     swipeTo(idx) {
+        let unitX = this.getUnitX();
+        let offsetLeft = unitX * idx;
 
+        easing(this.ctl).to({
+            offsetLeft
+        }, 2000, 'easeOutQuart').change(() => {
+            this.clear();
+            this.render();
+        }).run();
+    }
+
+    clear() {
+        let {position, width, height, padding} = this.options;
+        this.ctx.clearRect(...position, width + padding, height + padding);
     }
 
 }

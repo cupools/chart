@@ -2,7 +2,7 @@
 
 import easing from '../utils/easing';
 
-const FPS = 60;
+const FPS = 30;
 const requestAnimationFrame = (function() {
     return window.requestAnimationFrame ||
         window.webkitRequestAnimationFrame ||
@@ -15,7 +15,6 @@ const requestAnimationFrame = (function() {
 })();
 
 let store = [];
-
 check();
 
 function check() {
@@ -27,24 +26,23 @@ function check() {
     requestAnimationFrame(check);
 }
 
+// easing(el).to({xxx}, duration, bezier).change().run()
+
 class Easing {
     constructor(target) {
-        let callback;
-
-        if (typeof target === 'function') {
-            callback = function(current) {
-                return target(current);
-            };
-        }
-
-        this.callback = callback;
         this.stack = [];
+        this.callback = null;
         this.running = false;
         this.done = false;
+        this.target = target;
+        this._origin = {};
+
+        // TODO, only number
+        Object.assign(this._origin, target);
     }
 
     to(final, duration, bezier = easing['linear']) {
-        // TODO
+        // TODO, easing function adjust
         let easingFn;
 
         if (bezier.length) {
@@ -55,20 +53,25 @@ class Easing {
 
         this.stack = function * () {
             let keyframes = Math.ceil(duration / FPS);
+            let start = this._origin;
+            let target = this.target;
 
-            for (let i = 0; i < keyframes; i++) {
-                let pec = i / keyframes;
-                let current = final * easingFn(pec);
-                yield this.callback(current);
+            for (let i = 0; i <= keyframes; i++) {
+                for (let key in final) {
+                    if (final.hasOwnProperty(key)) {
+                        let offset = final[key] - start[key];
+                        let pec = i / keyframes;
+                        target[key] = start[key] + offset * easingFn(pec);
+                    }
+                }
+
+                yield this.callback && this.callback(target);
             }
 
-            yield this.callback(final);
+            yield this.callback && this.callback(final);
 
             this.running = false;
             this.done = true;
-            return {
-                done: true
-            };
         };
 
         return this;
@@ -81,8 +84,17 @@ class Easing {
     stop() {
         this.stack.splice(0, this.stack.length - 1);
     }
+
+    change(callback) {
+        if (typeof callback === 'function') {
+            this.callback = callback;
+        }
+        return this;
+    }
 }
 
 export default function(fn) {
     return new Easing(fn);
-};
+}
+
+;
