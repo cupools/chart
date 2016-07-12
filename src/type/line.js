@@ -88,7 +88,7 @@ class Line {
         let unitX = this.getUnitX();
         let data = renderData.map(p => Object.assign({}, p));
         let limitPos = limitIndex.map((i, idx) => this.coor.pos(i, 0)[0] + unitX / 2 * (idx ? 1 : -1) + offsetLeft);
-        let offsetX = Math.ceil(this.ctl.offsetLeft / unitX);
+        let offsetX = Math.round(this.ctl.offsetLeft / unitX);
 
         this.ctl.limitPos = limitPos;
         this.ctl.offsetX = offsetX;
@@ -338,6 +338,19 @@ class Line {
     getUnitY() {
         return this.graph.height / (this.ctl.maxUnitCount.y);
     }
+
+    getOffsetLeft() {
+        return this.ctl.offsetLeft;
+    }
+
+    setOffsetLeft(left) {
+        this.ctl.offsetLeft = left;
+    }
+
+    swipeTo(idx) {
+
+    }
+
 }
 
 export default {

@@ -1,9 +1,11 @@
 'use strict';
 
+import 'babel-polyfill';
 import './utils/polyfill.js';
 import Hammer from 'hammerjs';
 import Pie from './type/Pie';
 import Line from './type/Line';
+import easing from './type/Easing';
 
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
@@ -31,6 +33,12 @@ mc.on('panmove', function(ev) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     el.render();
 });
+
+easing(function(current) {
+    el.setOffsetLeft(current);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    el.render();
+}).to(200, 2000, 'easeOutQuart').run();
 
 mc.on('panend pancancel', function() {});
 
