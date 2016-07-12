@@ -1,5 +1,7 @@
-var Line = chart.Line;
+/* global chart */
+'use strict';
 
+var Line = chart.Line;
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
@@ -9,7 +11,6 @@ ctx.clearRect(0, 0, canvas.width, canvas.height);
 ctx.translate(0.5, 0.5);
 
 let el = Line.init(ctx);
-
 el.render();
 
 let mc = new Hammer.Manager(canvas);

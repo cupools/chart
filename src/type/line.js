@@ -197,7 +197,7 @@ class Line {
         let pos = null;
 
         // 右下角，倒数第二个标
-        pos = coor.point(expX, 0).offset(0, padding / 4 * 3).pos;
+        pos = coor.point(expX + 1, 0).offset(0, padding / 4 * 3).pos;
         this.text('7月/日', pos);
 
         // 左上角第一个标
