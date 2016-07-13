@@ -2,9 +2,11 @@
   "name": "chart",
   "version": "0.0.1",
   "description": "chart demo with canvas",
-  "main": "src/index.js",
+  "main": "dist/chart.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "node build/server.js",
+    "build": "webpack --config build/webpack.config.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +21,7 @@
   "bugs": {
     "url": "https://github.com/cupools/chart/issues"
   },
-  "homepage": "https://github.com/cupools/chart#readme",
+  "homepage": "https://github.com/cupools/chart",
   "devDependencies": {
     "babel": "^6.5.2",
     "babel-core": "^6.10.4",

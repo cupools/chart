@@ -2,9 +2,7 @@
 
 var webpack = require('webpack');
 var path = require('path');
-var pkg = require('./package.json');
-
-const banner = `version: ${pkg.version}`;
+var banner = require('./banner');
 
 module.exports = {
     entry: [
