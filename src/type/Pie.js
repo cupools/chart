@@ -47,7 +47,7 @@ export default {
             ctx.stroke();
             ctx.restore();
 
-            // TODO
+            // TODO, static angle
             let pos;
 
             ctx.save();
@@ -59,11 +59,11 @@ export default {
             ctx.moveTo(...pos);
             pos = new Circle(position, textRadius + outRadius).pos(angle);
             ctx.lineTo(...pos);
-            pos[0] = pos[0] + (idx ? -30 : 30);
+            pos[0] = pos[0] + (idx ? -15 : 15);
             ctx.lineTo(...pos);
             ctx.stroke();
             ctx.closePath();
-            
+
             ctx.beginPath();
             ctx.moveTo(...pos);
             ctx.arc(...pos, 3, 0, PI * 2, false);
@@ -71,12 +71,14 @@ export default {
             ctx.fillStyle = '#333';
             ctx.fill();
 
-            let txt = count;
-            pos[0] = pos[0] + (idx ? -15 : 6);
+            let txt = count + '枚';
+            pos[0] = pos[0] + (idx ? -6 : 6);
             pos[1] = pos[1] + 5;
             ctx.moveTo(...pos);
             ctx.font = '10px Arial';
-            ctx.textAlign = 'left';
+            ctx.textAlign = idx ? 'right' : 'left';
+
+            console.log(ctx.textAlign);
             ctx.fillStyle = '#333';
             ctx.fillText(txt, ...pos);
             ctx.restore();
