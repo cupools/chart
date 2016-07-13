@@ -2,7 +2,7 @@
   "name": "chart",
   "version": "0.0.1",
   "description": "chart demo with canvas",
-  "main": "dist/chart.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -27,10 +27,10 @@
     "file-loader": "^0.9.0",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",
-    "webpack-dev-server": "^1.14.1"
+    "babel-preset-es2015": "^6.9.0",
+    "webpack-dev-server": "^1.14.1",
+    "hammerjs": "^2.0.8"
   },
   "dependencies": {
-    "babel-preset-es2015": "^6.9.0",
-    "hammerjs": "^2.0.8"
   }
 }

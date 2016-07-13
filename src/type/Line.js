@@ -26,15 +26,6 @@ const defaultOptions = {
     }, {
         count: 7,
         name: 7
-    }, {
-        count: 8,
-        name: 8
-    }, {
-        count: 9,
-        name: 9
-    }, {
-        count: 10,
-        name: 10
     }],
     width: 300,
     height: 250,
@@ -84,11 +75,11 @@ class Line {
     }
 
     initialData() {
-        let {renderData} = this.options;
+        let {renderData, position} = this.options;
         let {limitIndex, offsetLeft} = this.ctl;
         let unitX = this.getUnitX();
         let data = renderData.map(p => Object.assign({}, p));
-        let limitPos = limitIndex.map((i, idx) => this.coor.pos(i, 0)[0] + unitX / 2 * (idx ? 1 : -1) + offsetLeft);
+        let limitPos = limitIndex.map((i, idx) => this.coor.pos(i, 0)[0] + unitX / 2 * (idx ? 1 : -1) + offsetLeft + position[0]);
         let offsetX = Math.round(this.ctl.offsetLeft / unitX);
 
         this.ctl.limitPos = limitPos;
@@ -197,8 +188,10 @@ class Line {
         let pos = null;
 
         // 右下角，倒数第二个标
-        pos = coor.point(expX + 1, 0).offset(0, padding / 4 * 3).pos;
-        this.text('7月/日', pos);
+        pos = coor.point(limitIndex[1], 0).offset(0, padding / 4 * 3).pos;
+        this.text('7月/日', pos, {
+            textAlign: 'center'
+        });
 
         // 左上角第一个标
         pos = coor.point(0, expY).offset(-padding / 4 * 3, 0).pos;
@@ -226,9 +219,19 @@ class Line {
     renderRegion() {
         let coor = this.coor;
         let points = coor.points;
+        let strokeLeft = true;
+        let strokeRight = true;
 
         let renderPoints = points.filter(p => {
-            return p.attrs.overflow === 0 || p.attrs.cross;
+            let {overflow, cross} = p.attrs;
+            if (cross) {
+                if (overflow < 0) {
+                    strokeLeft = false;
+                } else if (overflow > 0) {
+                    strokeRight = false;
+                }
+            }
+            return overflow === 0 || cross;
         }).map(p => {
             return p.attrs.cross || p;
         });
@@ -241,7 +244,9 @@ class Line {
 
             this.polygons(renderPoints.map(p => p.pos), {
                 fillStyle: 'rgba(127,170,126,.3)',
-                strokeStyle: 'rgb(127,170,126)'
+                strokeStyle: 'rgb(127,170,126)',
+                strokeLeft,
+                strokeRight
             });
         }
     }
@@ -253,7 +258,7 @@ class Line {
         let ctx = this.ctx;
 
         points.map(item => {
-            let {count, x, overflow} = item.attrs;
+            let {count, index, overflow} = item.attrs;
 
             if (!overflow) {
                 let pos = item.pos;
@@ -269,7 +274,7 @@ class Line {
 
                 // 绘制节点提示
                 let offset = -12;
-                if (x > 0 && x < len - 1 && count < points[x - 1].attrs.count) {
+                if (index > 0 && index < len - 1 && count < points[index - 1].attrs.count) {
                     offset = 13;
                 }
                 pos = item.copy().offset(0, offset).pos;
@@ -281,13 +286,13 @@ class Line {
     }
 
     text(txt, pos, opts = {}) {
-        let {fillStyle = '#999'} = opts;
+        let {fillStyle = '#999', textAlign = 'center'} = opts;
         let ctx = this.ctx;
         let left = pos[0];
         let top = pos[1] + 5;
 
         ctx.save();
-        ctx.textAlign = 'center';
+        ctx.textAlign = textAlign;
         ctx.font = '10px Arial';
         ctx.fillStyle = fillStyle;
         ctx.fillText(txt, left, top);
@@ -306,7 +311,8 @@ class Line {
         ctx.restore();
     }
 
-    polygons(points, {fillStyle, strokeStyle}) {
+    polygons(points, opts = {}) {
+        let {fillStyle, strokeStyle, strokeLeft, strokeRight} = opts;
         let ctx = this.ctx;
 
         ctx.save();
@@ -322,22 +328,41 @@ class Line {
         ctx.strokeStyle = strokeStyle;
         ctx.stroke();
 
-        ctx.lineTo(...points.shift());
-        ctx.lineTo(...points.shift());
+        let bottomRight = points.shift();
+        let bottomLeft = points.shift();
+
+        ctx.lineTo(...bottomRight);
+        if (strokeRight) {
+            ctx.stroke();
+        }
+
+        ctx.lineTo(...bottomLeft);
         ctx.lineTo(...first);
+
         ctx.fillStyle = fillStyle;
         ctx.fill();
+
         ctx.closePath();
+
+        if (strokeLeft) {
+            ctx.beginPath();
+            ctx.moveTo(...first);
+            ctx.lineTo(...bottomLeft);
+            ctx.stroke();
+            ctx.closePath();
+        }
+
         ctx.restore();
     }
 
     getUnitX() {
-        let unitWidth = _.max(this.graph.width / this.ctl.maxUnitCount.x, this.options.minUnitWidth);
+        // TODO
+        // let unitWidth = _.max(this.graph.width / this.ctl.maxUnitCount.x, this.options.minUnitWidth);
+        let unitWidth = this.options.minUnitWidth;
         return unitWidth;
     }
 
     getUnitY() {
-        // for top tips
         return (this.graph.height - 5) / (this.ctl.maxUnitCount.y);
     }
 
