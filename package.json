@@ -32,5 +32,6 @@
     "hammerjs": "^2.0.8"
   },
   "dependencies": {
+    "hidpi-canvas": "git+ssh://git@github.com/jondavidjohn/hidpi-canvas-polyfill.git"
   }
 }
