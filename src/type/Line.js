@@ -34,10 +34,6 @@ const defaultOptions = {
     minUnitWidth: 40
 };
 
-/**
- * TODO: 中间件方式绘图
- */
-
 class Line {
     constructor(ctx, opts) {
         let options = Object.assign({}, defaultOptions, opts);
@@ -143,21 +139,48 @@ class Line {
     renderAxies() {
         let mucX = this.ctl.maxUnitCount.x;
         let mucY = this.ctl.maxUnitCount.y;
+        let {origin, width} = this.graph;
+        let coor = this.coor;
 
         // x轴额外绘制一个无用点，实际上增加了两个单位
         // y轴额外绘制一个无用点，两条参考线
         let expX = mucX + 1;
         let expY = mucY + 1;
-        let coor = this.coor;
+        let bend = 3;
 
         // 绘制y轴参考线
         while (expY--) {
-            let start = coor.pos(0, expY);
-            let end = [this.graph.origin[0] + this.graph.width, start[1]];
+            let start = coor.pos(expY ? 0 : 1, expY);
+            let end = [origin[0] + width, start[1]];
 
             this.line(start, end, {
                 color: '#999'
             });
+        }
+
+        // 绘制曲折片段
+        let p = coor.point(0, 0);
+        let offset = [6, -4];
+
+        while (bend--) {
+            let [...start] = p.pos;
+            let [...end] = p.offset(...offset).pos;
+
+            this.line(start, end, {
+                color: '#999'
+            });
+
+            let [...back] = p.offset(0, -offset[1]).pos;
+            this.line(end, back, {
+                color: '#999'
+            });
+
+            if (!bend) {
+                end = p.setX(1).pos;
+                this.line(back, end, {
+                    color: '#999'
+                });
+            }
         }
 
         // 绘制x轴参考点
@@ -202,6 +225,10 @@ class Line {
                 let item = points[expX + offsetX].attrs;
                 pos = coor.point(expX + 1, 0).offset(0, padding / 3).pos;
                 this.text(item.name, pos);
+            }
+            if (expX === 0) {
+                pos = coor.point(0, 0).offset(0, padding / 3).pos;
+                this.text(0, pos);
             }
             expX--;
         }

@@ -1,4 +1,4 @@
-/* global chart */
+/* global chart, Hammer */
 'use strict';
 
 var Line = chart.Line;
