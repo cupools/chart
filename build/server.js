@@ -21,6 +21,6 @@ new WebpackDevServer(webpack(config), {
         console.log(err);
     } else {
         console.log('Listening at http://127.0.0.1:3000');
-        child.exec('open http://127.0.0.1:3000/examples/dev.html');
+        child.exec('open http://127.0.0.1:3000/build/dev.html');
     }
 });
