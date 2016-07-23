@@ -1,5 +1,5 @@
 /*!
- * chart.js -- v0.0.1 -- 2016-07-15
+ * chart.js -- v0.0.1 -- 2016-07-23
  * https://github.com/cupools/chart
  * 
  * Licensed under the MIT license

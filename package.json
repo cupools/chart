@@ -5,8 +5,8 @@
   "main": "dist/chart.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node build/server.js",
-    "build": "webpack --config build/webpack.config.js"
+    "dev": "node build/server.js",
+    "build": "webpack --config build/webpack.prod.js"
   },
   "repository": {
     "type": "git",
