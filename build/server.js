@@ -1,10 +1,10 @@
 // server.js
-'use strict';
+'use strict'
 
-var webpack = require('webpack');
-var WebpackDevServer = require('webpack-dev-server');
-var child = require('child_process');
-var config = require('./webpack.dev.js');
+var webpack = require('webpack')
+var WebpackDevServer = require('webpack-dev-server')
+var child = require('child_process')
+var config = require('./webpack.dev.js')
 
 new WebpackDevServer(webpack(config), {
     publicPath: config.output.publicPath,
@@ -18,9 +18,9 @@ new WebpackDevServer(webpack(config), {
     }
 }).listen(3000, '127.0.0.1', function(err, result) {
     if (err) {
-        console.log(err);
+        console.log(err)
     } else {
-        console.log('Listening at http://127.0.0.1:3000');
-        child.exec('open http://127.0.0.1:3000/build/dev.html');
+        console.log('Listening at http://127.0.0.1:3000')
+        child.exec('open http://127.0.0.1:3000/build/dev.html')
     }
-});
+})

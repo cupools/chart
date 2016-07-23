@@ -52,7 +52,7 @@ class Line {
             offsetX: 0,
             offsetLeft: 0,
             limitPos: [],
-            limitIndex: [1, 6],
+            limitIndex: [1, Math.floor((width - padding) / minUnitWidth)],
             sum: renderData.reduce((a, b) => (a.count ? a.count : a) + b.count),
             maxUnitCount: {
                 x: _.min(Math.ceil((width - padding) / minUnitWidth), renderData.length),

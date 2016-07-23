@@ -1,15 +1,16 @@
-'use strict';
+'use strict'
 
-var webpack = require('webpack');
-var path = require('path');
-var banner = require('./banner');
+var webpack = require('webpack')
+var path = require('path')
+var banner = require('./banner')
 
 module.exports = {
     entry: [
         './src/index.js'
     ],
     output: {
-        path: path.join(process.cwd(), 'dist/'),
+        // path: path.join(process.cwd(), 'dist/'),
+        path: path.join(process.cwd(), '../medal-table/components/chart/'),
         filename: 'chart.js',
         library: 'chart',
         libraryTarget: 'umd',
@@ -31,4 +32,4 @@ module.exports = {
             entryOnly: true
         })
     ]
-};
+}
