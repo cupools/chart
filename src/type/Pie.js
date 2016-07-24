@@ -7,7 +7,7 @@ const PI = Math.PI
 const outAngleMap = [PI / 4 * 7, PI / 4, PI / 4 * 3, PI / 4 * 5]
 
 const defaultOptions = {
-    renderDate: [],
+    renderData: [],
     radius: 100,
     textRadius: 0,
     outRadius: 0,
@@ -17,12 +17,12 @@ const defaultOptions = {
 export default {
     render(ctx, opt = {}) {
         let options = Object.assign({}, defaultOptions, opt)
-        let {renderDate, radius, textRadius, outRadius, position} = options
-        let sum = renderDate.reduce((a, b) => ((a.count ? a.count : a) + b.count))
-        let len = renderDate.length
+        let {renderData, radius, textRadius, outRadius, position} = options
+        let sum = renderData.reduce((a, b) => ((a.count != null ? a.count : a) + b.count))
+        let len = renderData.length
         let last = 0 - PI / 2
 
-        renderDate.map(item => {
+        renderData.map(item => {
             let {count} = item
             let startAngle = last
             let endAngle = count / sum * PI * 2 + startAngle
@@ -41,7 +41,7 @@ export default {
         })
 
         // 绘制主要的扇形区域
-        renderDate.map((item, idx) => {
+        renderData.map((item, idx) => {
             let {count, radius, texture, outRadius, startAngle, endAngle, middleAngle} = item
 
             if (count === 0) {
@@ -65,7 +65,7 @@ export default {
         })
 
         // 绘制注解
-        renderDate.map((item, idx) => {
+        renderData.map((item, idx) => {
             let {count, radius, outRadius, textRadius, middleAngle} = item
 
             if (count === 0 || !textRadius) {
@@ -78,6 +78,8 @@ export default {
                 // 绘制起始点
                 let pos = new Circle(position, Math.floor((radius + outRadius) / 4 * 3)).pos(middleAngle)
                 let outAngle = outAngleMap[Math.floor(middleAngle / PI * 2)]
+
+                let isLeft = !!idx || renderData[1].count === 0
 
                 ctx.save()
                 ctx.fillStyle = '#333'
@@ -97,25 +99,25 @@ export default {
                 pos = new Circle(pos, radius - textRadius).pos(outAngle - PI / 2)
 
                 ctx.lineTo(...pos)
-                pos[0] = pos[0] + (idx ? -15 : 15)
+                pos[0] = pos[0] + (isLeft ? -15 : 15)
                 ctx.lineTo(...pos)
                 ctx.stroke()
                 ctx.closePath()
 
                 // 绘制注解
                 ctx.beginPath()
-                pos[0] = pos[0] + (idx ? -4 : 4)
+                pos[0] = pos[0] + (isLeft ? -4 : 4)
                 pos[1] = pos[1] + 5
                 ctx.moveTo(...pos)
                 ctx.font = '10px Arial'
-                ctx.textAlign = idx ? 'right' : 'left'
+                ctx.textAlign = isLeft ? 'right' : 'left'
                 ctx.fillStyle = '#333'
                 ctx.fillText(txt, ...pos)
 
                 ctx.restore()
             } else {
                 let pos = new Circle(position, Math.floor((radius + outRadius) / 4 * 3)).pos(middleAngle)
-                let isRight = middleAngle > PI
+                let isLeft = middleAngle > PI
                 ctx.save()
                 ctx.fillStyle = '#333'
                 ctx.strokeStyle = '#333'
@@ -133,17 +135,17 @@ export default {
                 ctx.moveTo(...pos)
                 pos = new Circle(position, textRadius + outRadius).pos(middleAngle)
                 ctx.lineTo(...pos)
-                pos[0] = pos[0] + (isRight ? -15 : 15)
+                pos[0] = pos[0] + (isLeft ? -15 : 15)
                 ctx.lineTo(...pos)
                 ctx.stroke()
                 ctx.closePath()
 
                 // 绘制注解
-                pos[0] = pos[0] + (isRight ? -6 : 6)
+                pos[0] = pos[0] + (isLeft ? -6 : 6)
                 pos[1] = pos[1] + 5
                 ctx.moveTo(...pos)
                 ctx.font = '10px Arial'
-                ctx.textAlign = isRight ? 'right' : 'left'
+                ctx.textAlign = isLeft ? 'right' : 'left'
 
                 ctx.fillStyle = '#333'
                 ctx.fillText(txt, ...pos)

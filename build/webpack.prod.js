@@ -9,8 +9,7 @@ module.exports = {
         './src/index.js'
     ],
     output: {
-        // path: path.join(process.cwd(), 'dist/'),
-        path: path.join(process.cwd(), '../medal-table/components/chart/'),
+        path: path.join(process.cwd(), 'dist/'),
         filename: 'chart.js',
         library: 'chart',
         libraryTarget: 'umd',
