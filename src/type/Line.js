@@ -404,7 +404,9 @@ class Line {
         let min = 1 - unitX / 2
         let max = unitX * (this.options.renderData.length - limitIndex[1] + limitIndex[0]) - unitX / 2 - 1
 
+        max = _.max(max, unitX / 2 - 1)
         left = _.max(min, _.min(max, left))
+
         this.ctl.offsetLeft = left
     }
 
