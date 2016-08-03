@@ -212,7 +212,7 @@ class Line {
 
         // 右下角，倒数第二个标
         pos = coor.point(limitIndex[1], 0).offset(0, padding / 4 * 3).pos
-        this.text('7月/日', pos, {
+        this.text('8月/日', pos, {
             textAlign: 'center'
         })
 

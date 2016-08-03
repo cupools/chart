@@ -48,8 +48,9 @@ export default {
                 return false
             }
 
-            let pos = new Circle(position, outRadius).pos(middleAngle)
             outRadius = (len === 2 && sum / count !== 2) ? outRadius : 0
+
+            let pos = new Circle(position, outRadius).pos(middleAngle)
 
             ctx.save()
             ctx.beginPath()
