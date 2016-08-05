@@ -263,10 +263,10 @@ class Line {
             return p.attrs.cross || p
         })
 
-        let bottomLeft = renderPoints[0].copy().setY(0)
-        let bottomRight = renderPoints[renderPoints.length - 1].copy().setY(0)
-
         if (renderPoints.length > 1) {
+            let bottomLeft = renderPoints[0].copy().setY(0)
+            let bottomRight = renderPoints[renderPoints.length - 1].copy().setY(0)
+
             renderPoints.push(bottomRight, bottomLeft)
 
             this.polygons(renderPoints.map(p => p.pos), {
@@ -301,7 +301,7 @@ class Line {
 
                 // 绘制节点提示
                 let offset = -12
-                if (index > 0 && index < len - 1 && count < points[index - 1].attrs.count) {
+                if (index > 0 && index < len - 1 && count < points[index - 1].attrs.count && count > 1) {
                     offset = 13
                 }
                 pos = item.copy().offset(0, offset).pos
