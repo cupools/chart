@@ -50,6 +50,10 @@ export default {
         renderData.map((item, idx) => {
             let {count, radius, texture, outRadius, startAngle, endAngle, middleAngle} = item
 
+            if (sum && count === 0) {
+                return false
+            }
+
             outRadius = (len === 2 && sum && sum / count !== 2) ? outRadius : 0
 
             let pos = new Circle(position, outRadius).pos(middleAngle)
@@ -58,7 +62,6 @@ export default {
             ctx.beginPath()
             ctx.fillStyle = texture
             ctx.strokeStyle = texture
-
             ctx.moveTo(...pos)
             ctx.arc(...pos, radius, startAngle, endAngle, false)
             ctx.fill()
