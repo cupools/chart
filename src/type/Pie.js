@@ -22,10 +22,16 @@ export default {
         let len = renderData.length
         let last = 0 - PI / 2
 
+
         renderData.map(item => {
             let {count} = item
             let startAngle = last
+
             let endAngle = count / sum * PI * 2 + startAngle
+            // Fix empty data
+            if (isNaN(endAngle)) {
+                endAngle = startAngle + PI * 2 / renderData.length
+            }
             let middleAngle = (endAngle - startAngle + PI) / 2 + last
 
             last = endAngle
@@ -44,11 +50,7 @@ export default {
         renderData.map((item, idx) => {
             let {count, radius, texture, outRadius, startAngle, endAngle, middleAngle} = item
 
-            if (count === 0) {
-                return false
-            }
-
-            outRadius = (len === 2 && sum / count !== 2) ? outRadius : 0
+            outRadius = (len === 2 && sum && sum / count !== 2) ? outRadius : 0
 
             let pos = new Circle(position, outRadius).pos(middleAngle)
 
@@ -69,7 +71,7 @@ export default {
         renderData.map((item, idx) => {
             let {count, radius, outRadius, textRadius, middleAngle} = item
 
-            if (count === 0 || !textRadius) {
+            if ((sum && count === 0) || !textRadius) {
                 return false
             }
 
@@ -79,8 +81,7 @@ export default {
                 // 绘制起始点
                 let pos = new Circle(position, Math.floor((radius + outRadius) / 4 * 3)).pos(middleAngle)
                 let outAngle = outAngleMap[Math.floor(middleAngle / PI * 2)]
-
-                let isLeft = !!idx || renderData[1].count === 0
+                let isLeft = !!idx || (renderData[1].count === 0 && count !== 0)
 
                 ctx.save()
                 ctx.fillStyle = '#333'
