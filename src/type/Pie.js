@@ -1,6 +1,5 @@
 'use strict'
 
-import _ from '../utils/util'
 import Circle from './Circle'
 
 const PI = Math.PI
@@ -22,7 +21,6 @@ export default {
         let len = renderData.length
         let last = 0 - PI / 2
 
-
         renderData.map(item => {
             let {count} = item
             let startAngle = last
@@ -36,14 +34,14 @@ export default {
 
             last = endAngle
 
-            return _.assignWith(item, {
+            return Object.assign({}, {
                 radius,
                 textRadius,
                 outRadius,
                 startAngle,
                 endAngle,
                 middleAngle
-            })
+            }, item)
         })
 
         // 绘制主要的扇形区域
